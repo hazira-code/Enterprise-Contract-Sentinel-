@@ -1,0 +1,6 @@
+{
+  "name": "Enterprise Contract Sentinel",
+  "description": "Local, offline AI contract compliance engine powered by fine-tuned Llama-3, MCP tools, and LangGraph multi-agent orchestration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
