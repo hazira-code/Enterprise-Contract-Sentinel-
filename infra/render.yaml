@@ -1,0 +1,109 @@
+# =============================================================================
+# Enterprise Contract Sentinel - Render Infrastructure as Code Blueprint
+# File: /infra/render.yaml
+# Specification: Render Blueprint v1 (https://render.com/docs/blueprint-spec)
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. Full-Stack Web Service (React UI + Express Server + Server-Side Gemini)
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: sentinel-frontend
+    runtime: node
+    plan: starter
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: GEMINI_API_KEY
+        sync: false # Set securely in Render Dashboard Environment Secrets
+
+  # ---------------------------------------------------------------------------
+  # 2. LangGraph Agent Orchestrator & FastAPI Backend
+  # ---------------------------------------------------------------------------
+  - type: web
+    name: sentinel-orchestrator
+    runtime: python
+    plan: starter
+    region: oregon
+    rootDir: agent-orchestrator
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: "8000"
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: sentinel-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: sentinel-db
+          property: port
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: sentinel-db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: sentinel-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: sentinel-db
+          property: password
+      - key: MCP_SERVER_HOST
+        value: http://sentinel-mcp:8001
+
+  # ---------------------------------------------------------------------------
+  # 3. Model Context Protocol (MCP) Server (Private Service)
+  # ---------------------------------------------------------------------------
+  - type: pserv
+    name: sentinel-mcp
+    runtime: python
+    plan: starter
+    region: oregon
+    rootDir: mcp-server
+    buildCommand: pip install -r requirements.txt
+    startCommand: python server.py
+    envVars:
+      - key: PORT
+        value: "8001"
+      - key: POSTGRES_HOST
+        fromDatabase:
+          name: sentinel-db
+          property: host
+      - key: POSTGRES_PORT
+        fromDatabase:
+          name: sentinel-db
+          property: port
+      - key: POSTGRES_DB
+        fromDatabase:
+          name: sentinel-db
+          property: database
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: sentinel-db
+          property: user
+      - key: POSTGRES_PASSWORD
+        fromDatabase:
+          name: sentinel-db
+          property: password
+
+# -----------------------------------------------------------------------------
+# Managed PostgreSQL Database
+# -----------------------------------------------------------------------------
+databases:
+  - name: sentinel-db
+    plan: starter
+    region: oregon
+    databaseName: sentinel_db
+    user: sentinel_admin
+    postgresMajorVersion: "16"

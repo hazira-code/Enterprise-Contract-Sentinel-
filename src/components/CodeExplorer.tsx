@@ -7,16 +7,24 @@ import trainQloraCode from '@/ai-engine/train_qlora.py?raw';
 import evaluateRagasCode from '@/ai-engine/evaluate_ragas.py?raw';
 import initSqlCode from '@/docker/init.sql?raw';
 import dockerComposeCode from '@/docker/docker-compose.yml?raw';
+import renderYamlCode from '@/render.yaml?raw';
 
 interface FileEntry {
   path: string;
-  category: 'ai-engine' | 'mcp-server' | 'agent-orchestrator' | 'docker';
+  category: 'ai-engine' | 'mcp-server' | 'agent-orchestrator' | 'docker' | 'infra';
   language: string;
   description: string;
   content: string;
 }
 
 const REPO_FILES: FileEntry[] = [
+  {
+    path: '/render.yaml',
+    category: 'infra',
+    language: 'yaml',
+    description: 'Render Infrastructure-as-Code Blueprint deploying Frontend, Orchestrator, MCP, & PostgreSQL',
+    content: renderYamlCode
+  },
   {
     path: '/agent-orchestrator/app.py',
     category: 'agent-orchestrator',
